@@ -1,0 +1,17 @@
+{
+  "name": "connectfour",
+  "version": "1.0.0",
+  "description": "A game of connect four",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "parcel src/index.html",
+    "build": "parcel build --public-url . src/index.html"
+  },
+  "author": "Fraser Sabine",
+  "license": "ISC",
+  "devDependencies": {
+    "parcel": "^1.12.4",
+    "sass": "^1.23.0"
+  }
+}
