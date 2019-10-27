@@ -1,9 +1,11 @@
 export class ConnectFour {
     constructor(selector) {
         // Game variables
-        this.gameOver = 0;
-        this.playerTurn = 0;                                    // player 0 is red, player 1 is yellow
-        this.cellOwners = [];
+        this.gameOver = false;
+        this.playerTurn = 0;                // player 0 is red, player 1 is yellow
+        this.cellOwners = [];               // 2d array. Columns then rows
+        this.lastMove = 0;                  // user to keep track of refresh rate
+        this.updateTime = 40;               // How often mouseMovement can update in ms
 
         // Colours
         this.colourRed = 'rgb(240, 41, 41)';
@@ -15,8 +17,9 @@ export class ConnectFour {
         this.rows = 6;
         this.columns = 7;
         this.connect = 4;
-        this.selector = selector;
+
         this.canvas = document.getElementById(selector);
+
         this.width = this.canvas.scrollWidth;
         this.height = this.canvas.scrollHeight;
         this.canvas.width = this.width;                         // set canvas width to the same as the canvas element
@@ -24,8 +27,8 @@ export class ConnectFour {
 
         this.cellWidth = this.width / this.columns;
         this.cellHeight = this.height / this.rows;
-        this.radius = this.cellWidth / 2.6;                     // sets a radius that scales with the size of the canvas element
-        this.radiusSemi = this.radius - 8;
+        this.radius = this.cellWidth / 2.6;                     // sets raius for full circle that scales with canvas
+        this.radiusSemi = this.cellWidth / 3.6;                 // sets radius for circle outline that scales with canvas
         this.ctx = this.canvas.getContext('2d');
 
         this.initialise();
@@ -36,7 +39,7 @@ export class ConnectFour {
     }
 
     initialise() {
-        // Set all cell owners to null
+        // set all cell owners to null
         let rowsArray = [];
         for (let i = 0; i < this.columns; i++) {
             for (let j = 0; j < this.rows; j++) {
@@ -46,47 +49,51 @@ export class ConnectFour {
             rowsArray = [];
         }
 
-        // Draw grid
+        // draw grid
         this.drawGrid();
     }
 
     click(event) {
+        // find the next available cell in the column
 
-        // Find the next available cell in the column
         let cell = this.getCell(event.offsetX, event.offsetY);
-
         // if the cell is full don't do anything
         if (cell[1] == -1) {
             return;
         } else {
             // add cell to player owner
             this.cellOwners[cell[0]][cell[1]] = this.playerTurn;
-            console.log(this.cellOwners);
 
             // else draw a new grid with a full circle for the available cell in the column
             this.drawGrid();
 
-
             // toggle player turn
             this.playerTurn ^= 1;
 
-
-
+            // add new circle preview to new available cell
+            cell = this.getCell(event.offsetX, event.offsetY);
+            this.drawCell(cell, true);
         }
     }
 
     mouseMove(event) {
-        // Find the next available cell in the column
-        let cell = this.getCell(event.offsetX, event.offsetY);
+        // limit mouseMove updates to 
+        if (Date.now() - this.lastMove > this.updateTime) {
+            // find the next available cell in the column
+            let cell = this.getCell(event.offsetX, event.offsetY);
 
-        // If the cell is full don't draw anything
-        if (cell[1] == -1) {
-            return;
-        }
-        // Else draw a new grid with a semi circle for the available cell in the column
-        else {
-            this.drawGrid();
-            this.drawCell(cell, true);
+            // if the cell is full don't draw grid without filling cell
+            if (cell[1] == -1) {
+                this.drawGrid();
+            }
+            // Else draw a new grid with a semi circle for the available cell in the column
+            else {
+                this.drawGrid();
+                this.drawCell(cell, true);
+            }
+
+            // reset last move
+            this.lastMove = Date.now();
         }
     }
 
@@ -94,20 +101,21 @@ export class ConnectFour {
         let centerX = (cell[0] * this.cellWidth) + (this.cellWidth / 2);
         let centerY = (cell[1] * this.cellHeight) + (this.cellHeight / 2);
 
-        // Get player colour
+        // get player colour
         if (this.playerTurn == 0) {
-            // Red player
+            // red player
             this.ctx.fillStyle = this.colourRed;
         } else {
-            // Yellow player
+            // yellow player
             this.ctx.fillStyle = this.colourYellow;
         }
 
-        // Draw player colour circle
+        // draw player colour circle
         this.ctx.beginPath();
         this.ctx.arc(centerX, centerY, this.radius, 0, 2 * Math.PI);
         this.ctx.fill();
 
+        // if preview circle then blank out center of full circle
         if (semiCircle) {
             this.ctx.fillStyle = this.colourBlank;
             this.ctx.beginPath();
@@ -121,7 +129,10 @@ export class ConnectFour {
     }
 
     getCell(x, y) {
+        // get cell from mouse click
         let cell = this.checkCell(x, y);
+
+        // find out which row is the bottom in the column and return that cell
         for (let i = 0; i < this.rows; i++) {
             if (this.cellOwners[cell[0]][i] !== null) {
                 return [cell[0], i - 1];
@@ -132,11 +143,11 @@ export class ConnectFour {
 
 
     drawGrid() {
-        // Create rounded rectange
+        // create rounded rectange
         this.ctx.fillStyle = this.colourBlue;
         this.roundRect(this.ctx, 0, 0, this.width, this.height, 20, true, false)
 
-        // Create grid of holes
+        // create grid of holes
         let x = this.cellWidth / 2;                 // sets the initial x center position of the first hole
         let y = this.cellHeight / 2;                // sets the initial y center position of the first hole
         for (let i = 0; i < this.columns; i++) {
@@ -153,10 +164,10 @@ export class ConnectFour {
                 this.ctx.arc(x, y, this.radius, 0, 2 * Math.PI);
                 this.ctx.fill();
 
-                y = y + this.cellHeight;             // increments the x center position for the next hole in the row
+                y = y + this.cellHeight;                // increments the x center position for the next hole in the row
             }
-            y = this.cellHeight / 2;                 // resets the x center position for the next column of holes
-            x = x + this.cellWidth;                // increments the y center position for the next hole in the column
+            y = this.cellHeight / 2;                    // resets the x center position for the next column of holes
+            x = x + this.cellWidth;                     // increments the y center position for the next hole in the column
         }
     }
 
