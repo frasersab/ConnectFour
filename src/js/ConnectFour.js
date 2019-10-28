@@ -5,7 +5,7 @@ export class ConnectFour {
         this.playerTurn = 0;                // player 0 is red, player 1 is yellow
         this.cellOwners = [];               // 2d array. Columns then rows
         this.lastMove = 0;                  // user to keep track of refresh rate
-        this.updateTime = 40;               // How often mouseMovement can update in ms
+        this.updateTime = 100;               // How often mouseMovement can update in ms
 
         // Colours
         this.colourRed = 'rgb(240, 41, 41)';
@@ -70,7 +70,7 @@ export class ConnectFour {
             // toggle player turn
             this.playerTurn ^= 1;
 
-            // add new circle preview to new available cell
+            // add new circle preview to new available
             cell = this.getCell(event.offsetX, event.offsetY);
             this.drawCell(cell, true);
         }
