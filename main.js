@@ -5,4 +5,4 @@ parcelRequire=function(e,r,t,n){var i,o="function"==typeof parcelRequire&&parcel
 },{}],"epB2":[function(require,module,exports) {
 "use strict";require("../css/style.scss");var e=require("./ConnectFour.js");console.log("Kia Ora");var r=new e.ConnectFour("connect-four");
 },{"../css/style.scss":"RXon","./ConnectFour.js":"kqyp"}]},{},["epB2"], null)
-//# sourceMappingURL=/main.js.map
+//# sourceMappingURL=https://frasersab.github.io/ConnectFour/main.js.map
