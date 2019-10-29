@@ -5,4 +5,4 @@ parcelRequire=function(e,r,t,n){var i,o="function"==typeof parcelRequire&&parcel
 },{}],"d6sW":[function(require,module,exports) {
 "use strict";require("../css/style.scss");var e=require("./ConnectFour.js");console.log("Kia Ora");var r=new e.ConnectFour("connect-four");
 },{"../css/style.scss":"nCJ9","./ConnectFour.js":"X5h2"}]},{},["d6sW"], null)
-//# sourceMappingURL=/main.a6d3c390.js.map
+//# sourceMappingURL=/ConnectFour/main.a6d3c390.js.map
