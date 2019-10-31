@@ -2,10 +2,9 @@ body {
   margin: 0px;
   padding: 0px;
 }
+
 #connect-four {
-    //width: 7*5rem;
-    //height: 6*5rem;
-      padding: 0;
+  padding: 0;
   margin: auto;
   display: block;
   position: absolute;
@@ -14,3 +13,5 @@ body {
   left: 0;
   right: 0;
 }
+
+/*# sourceMappingURL=/main.fb6bbcaf.css.map */

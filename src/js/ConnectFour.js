@@ -16,10 +16,46 @@ export class ConnectFour {
         // Drawing variables
         this.rows = 6;
         this.columns = 7;
-        this.connect = 4;
+        this.aspectRatio = this.columns / this.rows;
+        this.connect = 4;                                       // number of pucks needed to algin to win
 
-        this.canvas = document.getElementById(selector);
+        this.canvas = document.getElementById(selector);        // the canvas element
+        this.ctx = this.canvas.getContext('2d');                // the canvas context
 
+        this.width = this.canvas.scrollWidth;                   // setting the canvas elements width to a variable
+        this.height = this.canvas.scrollHeight;                 // setting the canvas elements height to a variable
+        this.canvas.width = this.width;                         // set canvas width to the same as the canvas element
+        this.canvas.height = this.height;                       // set canvas height to the same as the canvas element
+
+        this.cellWidth = this.width / this.columns;
+        this.cellHeight = this.height / this.rows;
+        this.radius = this.cellWidth / 2.6;                     // sets raius for full circle that scales with canvas
+        this.radiusSemi = this.cellWidth / 3.6;                 // sets radius for circle outline that scales with canvas
+
+        this.initialise();
+
+        // Event listeners
+        this.canvas.addEventListener('click', this.click.bind(this));
+        this.canvas.addEventListener('mousemove', this.mouseMove.bind(this));
+        window.addEventListener('resize', this.resizeGame.bind(this), false);
+        window.addEventListener('orientationchange', this.resizeGame.bind(this), false);
+    }
+
+    resizeGame() {
+        let windowWidth = window.innerWidth;
+        let windowHeight = window.innerHeight;
+        let windowAspectRatio = windowWidth / windowHeight;
+
+        if (windowAspectRatio > this.aspectRatio) {
+            this.canvas.height = windowHeight;
+            this.canvas.width = this.aspectRatio * windowHeight;
+
+        } else {
+            this.canvas.width = windowWidth;
+            this.canvas.height = windowWidth / this.aspectRatio;
+        }
+
+        // reset all drawing variables
         this.width = this.canvas.scrollWidth;
         this.height = this.canvas.scrollHeight;
         this.canvas.width = this.width;                         // set canvas width to the same as the canvas element
@@ -29,13 +65,9 @@ export class ConnectFour {
         this.cellHeight = this.height / this.rows;
         this.radius = this.cellWidth / 2.6;                     // sets raius for full circle that scales with canvas
         this.radiusSemi = this.cellWidth / 3.6;                 // sets radius for circle outline that scales with canvas
-        this.ctx = this.canvas.getContext('2d');
 
-        this.initialise();
-
-        // Event listeners
-        this.canvas.addEventListener('click', this.click.bind(this));
-        this.canvas.addEventListener('mousemove', this.mouseMove.bind(this));
+        //
+        this.drawGrid();
     }
 
     initialise() {
@@ -49,8 +81,9 @@ export class ConnectFour {
             rowsArray = [];
         }
 
-        // draw grid
-        this.drawGrid();
+        // size the game
+        this.resizeGame();
+
     }
 
     click(event) {
@@ -124,7 +157,10 @@ export class ConnectFour {
         }
     }
 
+    // find cell number from x,y position
     checkCell(x, y) {
+        if (x == this.width) x--;       // handling edge case
+        if (y == this.height) y--;      // handling edge case
         return [Math.trunc(x / this.cellWidth), Math.trunc(y / this.cellHeight)];
     }
 
@@ -141,11 +177,10 @@ export class ConnectFour {
         return [cell[0], this.rows - 1];
     }
 
-
     drawGrid() {
         // create rounded rectange
         this.ctx.fillStyle = this.colourBlue;
-        this.roundRect(this.ctx, 0, 0, this.width, this.height, 20, true, false)
+        this.roundRect(this.ctx, 0, 0, this.width, this.height, this.radius, true, false)
 
         // create grid of holes
         let x = this.cellWidth / 2;                 // sets the initial x center position of the first hole
@@ -170,6 +205,8 @@ export class ConnectFour {
             x = x + this.cellWidth;                     // increments the y center position for the next hole in the column
         }
     }
+
+
 
     roundRect(ctx, x, y, width, height, radius, fill, stroke) {
         if (typeof stroke === 'undefined') {
