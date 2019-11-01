@@ -4,7 +4,7 @@ export class ConnectFour {
 		this.gameOver = false;
 		this.playerTurn = 0;                // player 0 is red, player 1 is yellow
 		this.cellOwners = [];               // 2d array of who owns which cell. Columns then rows
-		this.lastMouseMove = 0;                  // timer used to keep track of refresh rate
+		this.lastMouseMove = 0;				// timer used to keep track of refresh rate
 		this.updateTime = 60;               // how often mouseMovement can update in ms
 
 		// Colours
@@ -42,6 +42,7 @@ export class ConnectFour {
 		// only add hover affect if device has support
 		if (this.media.matches) {
 			this.canvas.addEventListener('mousemove', this.mouseMove.bind(this));
+			this.canvas.addEventListener('mouseout', this.mouseOut.bind(this), false);
 		}
 		this.media.addListener(this.mediaChange.bind(this));
 		window.addEventListener('resize', this.resizeGame.bind(this), false);
@@ -106,6 +107,11 @@ export class ConnectFour {
 		}
 	}
 
+	mouseOut() {
+		// redraw grid to remove highlighted cell if mouse moves out of canvas
+		this.drawGrid();
+	}
+
 	resizeGame() {
 		let windowWidth = window.innerWidth;
 		let windowHeight = window.innerHeight;
@@ -142,9 +148,11 @@ export class ConnectFour {
 		if (this.media.matches) {
 			// if hover is supported on device add hover functionality
 			this.canvas.addEventListener('mousemove', this.mouseMove.bind(this));
+			this.canvas.addEventListener("mouseout", this.mouseOut.bind(this));
 		} else {
 			// if hover is not supported on device remove hover functionality
 			this.canvas.removeEventListener('mousemove', this.mouseMove.bind(this));
+			this.canvas.addEventListener("mouseout", this.mouseOut.bind(this));
 		}
 	}
 

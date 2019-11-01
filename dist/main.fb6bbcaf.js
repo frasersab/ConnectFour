@@ -257,6 +257,7 @@ function () {
 
     if (this.media.matches) {
       this.canvas.addEventListener('mousemove', this.mouseMove.bind(this));
+      this.canvas.addEventListener('mouseout', this.mouseOut.bind(this), false);
     }
 
     this.media.addListener(this.mediaChange.bind(this));
@@ -323,6 +324,12 @@ function () {
       }
     }
   }, {
+    key: "mouseOut",
+    value: function mouseOut() {
+      // redraw grid to remove highlighted cell if mouse moves out of canvas
+      this.drawGrid();
+    }
+  }, {
     key: "resizeGame",
     value: function resizeGame() {
       var windowWidth = window.innerWidth;
@@ -357,9 +364,11 @@ function () {
       if (this.media.matches) {
         // if hover is supported on device add hover functionality
         this.canvas.addEventListener('mousemove', this.mouseMove.bind(this));
+        this.canvas.addEventListener("mouseout", this.mouseOut.bind(this));
       } else {
         // if hover is not supported on device remove hover functionality
         this.canvas.removeEventListener('mousemove', this.mouseMove.bind(this));
+        this.canvas.addEventListener("mouseout", this.mouseOut.bind(this));
       }
     }
   }, {
