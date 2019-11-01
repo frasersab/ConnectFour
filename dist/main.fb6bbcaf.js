@@ -213,17 +213,19 @@ function () {
     this.gameOver = false;
     this.playerTurn = 0; // player 0 is red, player 1 is yellow
 
-    this.cellOwners = []; // 2d array. Columns then rows
+    this.cellOwners = []; // 2d array of who owns which cell. Columns then rows
 
-    this.lastMove = 0; // user to keep track of refresh rate
+    this.lastMouseMove = 0; // timer used to keep track of refresh rate
 
-    this.updateTime = 100; // How often mouseMovement can update in ms
+    this.updateTime = 60; // how often mouseMovement can update in ms
     // Colours
 
     this.colourRed = 'rgb(240, 41, 41)';
     this.colourYellow = 'rgb(240, 232, 10)';
     this.colourBlue = 'rgb(44, 173, 242)';
-    this.colourBlank = 'rgb(255, 255, 255)'; // Drawing variables
+    this.colourBlank = 'rgb(255, 255, 255)'; // Hover support query
+
+    this.media = window.matchMedia('(hover: hover)'); // Drawing variables
 
     this.rows = 6;
     this.columns = 7;
@@ -238,56 +240,31 @@ function () {
 
     this.height = this.canvas.scrollHeight; // setting the canvas elements height to a variable
 
-    this.canvas.width = this.width; // set canvas width to the same as the canvas element
+    this.canvas.width = this.width; // set internal canvas width to the same as the canvas element
 
-    this.canvas.height = this.height; // set canvas height to the same as the canvas element
+    this.canvas.height = this.height; // set internal canvas height to the same as the canvas element
 
     this.cellWidth = this.width / this.columns;
     this.cellHeight = this.height / this.rows;
     this.radius = this.cellWidth / 2.6; // sets raius for full circle that scales with canvas
 
-    this.radiusSemi = this.cellWidth / 3.6; // sets radius for circle outline that scales with canvas
+    this.radiusOutline = this.cellWidth / 3.6; // sets radius for circle outline that scales with canvas
 
-    this.initialise(); // Event listeners
+    this.initialise(); // runs everything needed for startup
+    // Event listeners
 
-    this.canvas.addEventListener('click', this.click.bind(this));
-    this.canvas.addEventListener('mousemove', this.mouseMove.bind(this));
+    this.canvas.addEventListener('click', this.click.bind(this)); // only add hover affect if device has support
+
+    if (this.media.matches) {
+      this.canvas.addEventListener('mousemove', this.mouseMove.bind(this));
+    }
+
+    this.media.addListener(this.mediaChange.bind(this));
     window.addEventListener('resize', this.resizeGame.bind(this), false);
     window.addEventListener('orientationchange', this.resizeGame.bind(this), false);
   }
 
   _createClass(ConnectFour, [{
-    key: "resizeGame",
-    value: function resizeGame() {
-      var windowWidth = window.innerWidth;
-      var windowHeight = window.innerHeight;
-      var windowAspectRatio = windowWidth / windowHeight;
-
-      if (windowAspectRatio > this.aspectRatio) {
-        this.canvas.height = windowHeight;
-        this.canvas.width = this.aspectRatio * windowHeight;
-      } else {
-        this.canvas.width = windowWidth;
-        this.canvas.height = windowWidth / this.aspectRatio;
-      } // reset all drawing variables
-
-
-      this.width = this.canvas.scrollWidth;
-      this.height = this.canvas.scrollHeight;
-      this.canvas.width = this.width; // set canvas width to the same as the canvas element
-
-      this.canvas.height = this.height; // set canvas height to the same as the canvas element
-
-      this.cellWidth = this.width / this.columns;
-      this.cellHeight = this.height / this.rows;
-      this.radius = this.cellWidth / 2.6; // sets raius for full circle that scales with canvas
-
-      this.radiusSemi = this.cellWidth / 3.6; // sets radius for circle outline that scales with canvas
-      //
-
-      this.drawGrid();
-    }
-  }, {
     key: "initialise",
     value: function initialise() {
       // set all cell owners to null
@@ -304,51 +281,129 @@ function () {
 
 
       this.resizeGame();
-    }
+    } // handles 
+
   }, {
     key: "click",
     value: function click(event) {
       // find the next available cell in the column
-      var cell = this.getCell(event.offsetX, event.offsetY); // if the cell is full don't do anything
+      var cell = this.getCell(event.offsetX, event.offsetY); // check if the column is full
 
       if (cell[1] == -1) {
+        // if column is full don't do anything
         return;
       } else {
         // add cell to player owner
-        this.cellOwners[cell[0]][cell[1]] = this.playerTurn; // else draw a new grid with a full circle for the available cell in the column
+        this.cellOwners[cell[0]][cell[1]] = this.playerTurn; // draw a new grid with a full circle for the available cell in the column
 
         this.drawGrid(); // toggle player turn
 
-        this.playerTurn ^= 1; // add new circle preview to new available
-
-        cell = this.getCell(event.offsetX, event.offsetY);
-        this.drawCell(cell, true);
+        this.playerTurn ^= 1;
       }
     }
   }, {
     key: "mouseMove",
     value: function mouseMove(event) {
-      // limit mouseMove updates to 
-      if (Date.now() - this.lastMove > this.updateTime) {
+      // limit mouseMove updates to 'updateTime'
+      if (Date.now() - this.lastMouseMove > this.updateTime) {
         // find the next available cell in the column
-        var cell = this.getCell(event.offsetX, event.offsetY); // if the cell is full don't draw grid without filling cell
+        var cell = this.getCell(event.offsetX, event.offsetY); // check if the column is full
 
         if (cell[1] == -1) {
+          // if column is full redraw grid
           this.drawGrid();
-        } // Else draw a new grid with a semi circle for the available cell in the column
-        else {
-            this.drawGrid();
-            this.drawCell(cell, true);
-          } // reset last move
+        } else {
+          // redraw grid and then add highlighted celll
+          this.drawGrid();
+          this.drawCellOutline(cell);
+        } // reset last mouse move
 
 
-        this.lastMove = Date.now();
+        this.lastMouseMove = Date.now();
       }
     }
   }, {
-    key: "drawCell",
-    value: function drawCell(cell) {
-      var semiCircle = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+    key: "resizeGame",
+    value: function resizeGame() {
+      var windowWidth = window.innerWidth;
+      var windowHeight = window.innerHeight;
+      var windowAspectRatio = windowWidth / windowHeight; // check if the device is in portrain or landscape
+
+      if (windowAspectRatio > this.aspectRatio) {
+        // portrait
+        this.canvas.height = windowHeight;
+        this.canvas.width = this.aspectRatio * windowHeight;
+      } else {
+        // landscape
+        this.canvas.width = windowWidth;
+        this.canvas.height = windowWidth / this.aspectRatio;
+      } // reset all drawing variables
+
+
+      this.width = this.canvas.scrollWidth;
+      this.height = this.canvas.scrollHeight;
+      this.canvas.width = this.width;
+      this.canvas.height = this.height;
+      this.cellWidth = this.width / this.columns;
+      this.cellHeight = this.height / this.rows;
+      this.radius = this.cellWidth / 2.6;
+      this.radiusOutline = this.cellWidth / 3.6; // redraw canvas
+
+      this.drawGrid();
+    }
+  }, {
+    key: "mediaChange",
+    value: function mediaChange() {
+      if (this.media.matches) {
+        // if hover is supported on device add hover functionality
+        this.canvas.addEventListener('mousemove', this.mouseMove.bind(this));
+      } else {
+        // if hover is not supported on device remove hover functionality
+        this.canvas.removeEventListener('mousemove', this.mouseMove.bind(this));
+      }
+    }
+  }, {
+    key: "drawGrid",
+    value: function drawGrid() {
+      // create blue rounded rectange
+      this.ctx.fillStyle = this.colourBlue;
+      this.roundRect(this.ctx, 0, 0, this.width, this.height, this.radius, true, false); // create grid of holes
+
+      var x = this.cellWidth / 2; // sets the initial x center position of the first hole
+
+      var y = this.cellHeight / 2; // sets the initial y center position of the first hole
+
+      for (var i = 0; i < this.columns; i++) {
+        for (var j = 0; j < this.rows; j++) {
+          // check who owns the cell
+          if (this.cellOwners[i][j] == 0) {
+            // if player 0 owns the cell make it red
+            this.ctx.fillStyle = this.colourRed;
+          } else if (this.cellOwners[i][j] == 1) {
+            // if player 1 owns the cell make it yellow
+            this.ctx.fillStyle = this.colourYellow;
+          } else {
+            // if noone owns the cell make it white
+            this.ctx.fillStyle = this.colourBlank;
+          } // draw the circle
+
+
+          this.ctx.beginPath();
+          this.ctx.arc(x, y, this.radius, 0, 2 * Math.PI);
+          this.ctx.fill(); // increment the y position by a cell
+
+          y = y + this.cellHeight;
+        } // reset y position
+
+
+        y = this.cellHeight / 2; // increment the x position by a cell
+
+        x = x + this.cellWidth;
+      }
+    }
+  }, {
+    key: "drawCellOutline",
+    value: function drawCellOutline(cell) {
       var centerX = cell[0] * this.cellWidth + this.cellWidth / 2;
       var centerY = cell[1] * this.cellHeight + this.cellHeight / 2; // get player colour
 
@@ -363,22 +418,19 @@ function () {
 
       this.ctx.beginPath();
       this.ctx.arc(centerX, centerY, this.radius, 0, 2 * Math.PI);
-      this.ctx.fill(); // if preview circle then blank out center of full circle
+      this.ctx.fill(); // fill the center with white to make outline
 
-      if (semiCircle) {
-        this.ctx.fillStyle = this.colourBlank;
-        this.ctx.beginPath();
-        this.ctx.arc(centerX, centerY, this.radiusSemi, 0, 2 * Math.PI);
-        this.ctx.fill();
-      }
-    } // find cell number from x,y position
-
+      this.ctx.fillStyle = this.colourBlank;
+      this.ctx.beginPath();
+      this.ctx.arc(centerX, centerY, this.radiusOutline, 0, 2 * Math.PI);
+      this.ctx.fill();
+    }
   }, {
     key: "checkCell",
     value: function checkCell(x, y) {
-      if (x == this.width) x--; // handling edge case
+      if (x == this.width) x--; // handling edge case for when x = width
 
-      if (y == this.height) y--; // handling edge case
+      if (y == this.height) y--; // handling edge case for when y = height
 
       return [Math.trunc(x / this.cellWidth), Math.trunc(y / this.cellHeight)];
     }
@@ -386,7 +438,7 @@ function () {
     key: "getCell",
     value: function getCell(x, y) {
       // get cell from mouse click
-      var cell = this.checkCell(x, y); // find out which row is the bottom in the column and return that cell
+      var cell = this.checkCell(x, y); // find out which row is the bottom in the column and return that cell, -1 if full
 
       for (var i = 0; i < this.rows; i++) {
         if (this.cellOwners[cell[0]][i] !== null) {
@@ -397,78 +449,21 @@ function () {
       return [cell[0], this.rows - 1];
     }
   }, {
-    key: "drawGrid",
-    value: function drawGrid() {
-      // create rounded rectange
-      this.ctx.fillStyle = this.colourBlue;
-      this.roundRect(this.ctx, 0, 0, this.width, this.height, this.radius, true, false); // create grid of holes
-
-      var x = this.cellWidth / 2; // sets the initial x center position of the first hole
-
-      var y = this.cellHeight / 2; // sets the initial y center position of the first hole
-
-      for (var i = 0; i < this.columns; i++) {
-        for (var j = 0; j < this.rows; j++) {
-          if (this.cellOwners[i][j] == 0) {
-            this.ctx.fillStyle = this.colourRed;
-          } else if (this.cellOwners[i][j] == 1) {
-            this.ctx.fillStyle = this.colourYellow;
-          } else {
-            this.ctx.fillStyle = this.colourBlank;
-          }
-
-          this.ctx.beginPath();
-          this.ctx.arc(x, y, this.radius, 0, 2 * Math.PI);
-          this.ctx.fill();
-          y = y + this.cellHeight; // increments the x center position for the next hole in the row
-        }
-
-        y = this.cellHeight / 2; // resets the x center position for the next column of holes
-
-        x = x + this.cellWidth; // increments the y center position for the next hole in the column
-      }
-    }
-  }, {
     key: "roundRect",
-    value: function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
-      if (typeof stroke === 'undefined') {
-        stroke = true;
-      }
-
-      if (typeof radius === 'undefined') {
-        radius = 5;
-      }
-
-      if (typeof radius === 'number') {
-        radius = {
-          tl: radius,
-          tr: radius,
-          br: radius,
-          bl: radius
-        };
-      } else {
-        var defaultRadius = {
-          tl: 0,
-          tr: 0,
-          br: 0,
-          bl: 0
-        };
-
-        for (var side in defaultRadius) {
-          radius[side] = radius[side] || defaultRadius[side];
-        }
-      }
-
+    value: function roundRect(ctx, x, y, width, height) {
+      var radius = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 5;
+      var fill = arguments.length > 6 ? arguments[6] : undefined;
+      var stroke = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : true;
       ctx.beginPath();
-      ctx.moveTo(x + radius.tl, y);
-      ctx.lineTo(x + width - radius.tr, y);
-      ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
-      ctx.lineTo(x + width, y + height - radius.br);
-      ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
-      ctx.lineTo(x + radius.bl, y + height);
-      ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
-      ctx.lineTo(x, y + radius.tl);
-      ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
       ctx.closePath();
 
       if (fill) {
@@ -522,7 +517,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56009" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50017" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
