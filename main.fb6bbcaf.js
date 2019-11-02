@@ -269,6 +269,7 @@ function () {
     key: "initialise",
     value: function initialise() {
       // set all cell owners to null
+      this.cellOwners = [];
       var rowsArray = [];
 
       for (var i = 0; i < this.columns; i++) {
@@ -278,8 +279,11 @@ function () {
 
         this.cellOwners.push(rowsArray);
         rowsArray = [];
-      } // size the game
+      } // reset game controls
 
+
+      this.gameOver = false;
+      this.playerTurn = 0; // draw the game
 
       this.resizeGame();
     } // handles 
@@ -287,19 +291,38 @@ function () {
   }, {
     key: "click",
     value: function click(event) {
-      // find the next available cell in the column
-      var cell = this.getCell(event.offsetX, event.offsetY); // check if the column is full
-
-      if (cell[1] == -1) {
-        // if column is full don't do anything
-        return;
+      // is game over?
+      if (this.gameOver == true) {
+        // reset the game
+        this.initialise();
       } else {
-        // add cell to player owner
-        this.cellOwners[cell[0]][cell[1]] = this.playerTurn; // draw a new grid with a full circle for the available cell in the column
+        // find the next available cell in the column
+        var cell = this.getCell(event.offsetX, event.offsetY); // check if the column is full
 
-        this.drawGrid(); // toggle player turn
+        if (cell[1] == -1) {
+          // if column is full don't do anything
+          return;
+        } else {
+          // add cell to player owner
+          this.cellOwners[cell[0]][cell[1]] = this.playerTurn; // draw a new grid with a full circle for the available cell in the column
 
-        this.playerTurn ^= 1;
+          this.drawGrid(); // check for win
+
+          var winner = this.checkWin();
+
+          if (winner == 0) {
+            // red wins
+            this.gameOver = true;
+            console.log('Red Wins!');
+          } else if (winner == 1) {
+            // yellow wins
+            this.gameOver = true;
+            console.log('Yellow Wins!');
+          } else {
+            // toggle player turn
+            this.playerTurn ^= 1;
+          }
+        }
       }
     }
   }, {
@@ -456,6 +479,65 @@ function () {
       }
 
       return [cell[0], this.rows - 1];
+    }
+  }, {
+    key: "checkWin",
+    value: function checkWin() {
+      // only works for 4 connect
+      // run through each cell
+      for (var i = 0; i < this.columns; i++) {
+        for (var j = 0; j < this.rows; j++) {
+          // horizontal check
+          if (i - this.connect <= 0) {
+            // if there is enough cells to check horizontally then check
+            if (this.cellOwners[i][j] == 0 && this.cellOwners[i + 1][j] == 0 && this.cellOwners[i + 2][j] == 0 && this.cellOwners[i + 3][j] == 0) {
+              return 0;
+            }
+
+            if (this.cellOwners[i][j] == 1 && this.cellOwners[i + 1][j] == 1 && this.cellOwners[i + 2][j] == 1 && this.cellOwners[i + 3][j] == 1) {
+              return 1;
+            }
+          } // vertical
+
+
+          if (j - this.connect <= 0) {
+            // if there is enough cells to check vertically then check
+            if (this.cellOwners[i][j] == 0 && this.cellOwners[i][j + 1] == 0 && this.cellOwners[i][j + 2] == 0 && this.cellOwners[i][j + 3] == 0) {
+              return 0;
+            }
+
+            if (this.cellOwners[i][j] == 1 && this.cellOwners[i][j + 1] == 1 && this.cellOwners[i][j + 2] == 1 && this.cellOwners[i][j + 3] == 1) {
+              return 1;
+            }
+          } // diagonal, right/down
+
+
+          if (i - this.connect <= 0 && j - this.connect <= 0) {
+            // if there is enough cells to check diagonaly then check
+            if (this.cellOwners[i][j] == 0 && this.cellOwners[i + 1][j + 1] == 0 && this.cellOwners[i + 2][j + 2] == 0 && this.cellOwners[i + 3][j + 3] == 0) {
+              return 0;
+            }
+
+            if (this.cellOwners[i][j] == 1 && this.cellOwners[i + 1][j + 1] == 1 && this.cellOwners[i + 2][j + 2] == 1 && this.cellOwners[i + 3][j + 3] == 1) {
+              return 1;
+            }
+          } // diagonal, right/up
+
+
+          if (i - this.connect <= 0 && j - this.connect <= 0) {
+            // if there is enough cells to check diagonaly then check
+            if (this.cellOwners[i][j] == 0 && this.cellOwners[i + 1][j - 1] == 0 && this.cellOwners[i + 2][j - 2] == 0 && this.cellOwners[i + 3][j - 3] == 0) {
+              return 0;
+            }
+
+            if (this.cellOwners[i][j] == 1 && this.cellOwners[i + 1][j - 1] == 1 && this.cellOwners[i + 2][j - 2] == 1 && this.cellOwners[i + 3][j - 3] == 1) {
+              return 1;
+            }
+          }
+        }
+      }
+
+      return null;
     }
   }, {
     key: "roundRect",
