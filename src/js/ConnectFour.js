@@ -267,53 +267,75 @@ export class ConnectFour {
 	}
 
 	checkWin() {
-		// only works for 4 connect
-
-		// run through each cell
-		for (let i = 0; i < this.columns; i++) {
-			for (let j = 0; j < this.rows; j++) {
-				// horizontal check
-				if ((i - this.connect) <= 0) {
-					// if there is enough cells to check horizontally then check
-					if ((this.cellOwners[i][j] == 0) && (this.cellOwners[i + 1][j] == 0) && (this.cellOwners[i + 2][j] == 0) && (this.cellOwners[i + 3][j] == 0)) {
-						return 0;
-					}
-					if ((this.cellOwners[i][j] == 1) && (this.cellOwners[i + 1][j] == 1) && (this.cellOwners[i + 2][j] == 1) && (this.cellOwners[i + 3][j] == 1)) {
-						return 1;
-					}
-				}
-				// vertical
-				if ((j - this.connect) <= 0) {
-					// if there is enough cells to check vertically then check
-					if ((this.cellOwners[i][j] == 0) && (this.cellOwners[i][j + 1] == 0) && (this.cellOwners[i][j + 2] == 0) && (this.cellOwners[i][j + 3] == 0)) {
-						return 0;
-					}
-					if ((this.cellOwners[i][j] == 1) && (this.cellOwners[i][j + 1] == 1) && (this.cellOwners[i][j + 2] == 1) && (this.cellOwners[i][j + 3] == 1)) {
-						return 1;
-					}
-				}
-				// diagonal, right/down
-				if (((i - this.connect) <= 0) && ((j - this.connect) <= 0)) {
-					// if there is enough cells to check diagonaly then check
-					if ((this.cellOwners[i][j] == 0) && (this.cellOwners[i + 1][j + 1] == 0) && (this.cellOwners[i + 2][j + 2] == 0) && (this.cellOwners[i + 3][j + 3] == 0)) {
-						return 0;
-					}
-					if ((this.cellOwners[i][j] == 1) && (this.cellOwners[i + 1][j + 1] == 1) && (this.cellOwners[i + 2][j + 2] == 1) && (this.cellOwners[i + 3][j + 3] == 1)) {
-						return 1;
-					}
-				}
-				// diagonal, right/up
-				if (((i - this.connect) <= 0) && ((j - this.connect) <= 0)) {
-					// if there is enough cells to check diagonaly then check
-					if ((this.cellOwners[i][j] == 0) && (this.cellOwners[i + 1][j - 1] == 0) && (this.cellOwners[i + 2][j - 2] == 0) && (this.cellOwners[i + 3][j - 3] == 0)) {
-						return 0;
-					}
-					if ((this.cellOwners[i][j] == 1) && (this.cellOwners[i + 1][j - 1] == 1) && (this.cellOwners[i + 2][j - 2] == 1) && (this.cellOwners[i + 3][j - 3] == 1)) {
-						return 1;
-					}
+		let redCounter = 0;
+		let yellowCounter = 0;
+		// check for right/down horizontal win by scanning columns
+		for (let i = 0; i < this.rows; i++) {
+			redCounter = 0;
+			yellowcounter = 0;
+			for (let j = 0; j < this.columns; j++) {
+				switch (this.cellOwners[i][j]) {
+					case 0:
+						redCounter++;
+						yellowcounter = 0;
+						if (redCounter >= this.connect) return 0;
+						break;
+					case 1:
+						redCounter = 0;
+						yellowcounter++;
+						if (yellowCounter >= this.connect) return 0;
+						break;
+					default:
+						redCounter = 0;
+						yellowcounter = 0;
 				}
 			}
 		}
+		// check for horizontal win by scanning columns
+		for (let i = 0; i < this.rows; i++) {
+			redCounter = 0;
+			yellowcounter = 0;
+			for (let j = 0; j < this.columns; j++) {
+				switch (this.cellOwners[i][j]) {
+					case 0:
+						redCounter++;
+						yellowcounter = 0;
+						if (redCounter >= this.connect) return 0;
+						break;
+					case 1:
+						redCounter = 0;
+						yellowcounter++;
+						if (yellowCounter >= this.connect) return 0;
+						break;
+					default:
+						redCounter = 0;
+						yellowcounter = 0;
+				}
+			}
+		}
+		// check for vertical win by scanning rows
+		for (let i = 0; i < this.columns; i++) {
+			redCounter = 0;
+			yellowcounter = 0;
+			for (let j = 0; j < this.rows; j++) {
+				switch (this.cellOwners[i][j]) {
+					case 0:
+						redCounter++;
+						yellowcounter = 0;
+						if (redCounter >= this.connect) return 0;
+						break;
+					case 1:
+						redCounter = 0;
+						yellowcounter++;
+						if (yellowCounter >= this.connect) return 0;
+						break;
+					default:
+						redCounter = 0;
+						yellowcounter = 0;
+				}
+			}
+		}
+
 		return null;
 	}
 
