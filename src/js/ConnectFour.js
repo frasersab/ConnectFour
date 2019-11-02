@@ -2,6 +2,7 @@ export class ConnectFour {
 	constructor(selector) {
 		// Game variables
 		this.gameOver = false;
+		this.gameTie = false;
 		this.playerTurn = 0;                // player 0 is red, player 1 is yellow
 		this.cellOwners = [];               // 2d array of who owns which cell. Columns then rows
 		this.lastMouseMove = 0;				// timer used to keep track of refresh rate
@@ -9,9 +10,18 @@ export class ConnectFour {
 
 		// Colours
 		this.colourRed = 'rgb(240, 41, 41)';
+		this.colourRedDark = 'rgb(220, 21, 21)';
 		this.colourYellow = 'rgb(240, 232, 10)';
+		this.colourYellowDark = 'rgb(220, 212, 0)';
+		this.colourTie = 'rgb(240, 240, 240)';
+		this.colourTieDark = 'rgb(220, 220, 220)';
 		this.colourBlue = 'rgb(44, 173, 242)';
 		this.colourBlank = 'rgb(255, 255, 255)';
+
+		// Win text
+		this.redWinText = 'Red Wins!';
+		this.yellowWinText = 'Yellow Wins!';
+		this.tieText = 'Tie!';
 
 		// Hover support query
 		this.media = window.matchMedia('(hover: hover)');
@@ -64,6 +74,7 @@ export class ConnectFour {
 		// reset game controls
 		this.gameOver = false;
 		this.playerTurn = 0;
+		this.gameTie = false;
 
 		// draw the game
 		this.resizeGame();
@@ -93,21 +104,30 @@ export class ConnectFour {
 				this.drawGrid();
 
 				// check for win
-				if (this.checkWin(cell[0], cell[1])) {
-					this.gameOver = true;
-					console.log('game over');
-					return;
-				} else {
-					// toggle player turn
-					this.playerTurn ^= 1;
+				switch (this.checkWin(cell[0], cell[1])) {
+					case true:
+						// winner
+						this.gameOver = true;
+						this.winText();
+						break;
+
+					case 'tie':
+						// tie
+						this.gameOver = true;
+						this.winText();
+						break;
+
+					default:
+						// toggle player turn
+						this.playerTurn ^= 1;
 				}
 			}
 		}
 	}
 
 	mouseMove(event) {
-		// limit mouseMove updates to 'updateTime'
-		if (Date.now() - this.lastMouseMove > this.updateTime) {
+		// limit mouseMove updates to 'updateTime' and only if the game isn't over
+		if ((Date.now() - this.lastMouseMove > this.updateTime) && !this.gameOver) {
 			// find the next available cell in the column
 			let cell = this.getCell(event.offsetX, event.offsetY);
 
@@ -127,8 +147,10 @@ export class ConnectFour {
 	}
 
 	mouseOut() {
-		// redraw grid to remove highlighted cell if mouse moves out of canvas
-		this.drawGrid();
+		if (!this.gameOver) {
+			// redraw grid to remove highlighted cell if mouse moves out of canvas
+			this.drawGrid();
+		}
 	}
 
 	resizeGame() {
@@ -259,6 +281,7 @@ export class ConnectFour {
 
 	checkWin(column, row) {
 		let horizonal = [], vertical = [], diagonalLeft = [], diagonalRight = [];
+		let tie = true;
 		// populate 
 		for (let i = 0; i < this.columns; i++) {
 			for (let j = 0; j < this.rows; j++) {
@@ -274,18 +297,25 @@ export class ConnectFour {
 				if (i + j == column + row) {
 					diagonalRight.push(this.cellOwners[i][j]);
 				}
-
 				// diagonalLeft (top left to bottom right)
 				if (i - j == column - row) {
 					diagonalLeft.push(this.cellOwners[i][j]);
 				}
+				// check for tie
+				if (this.cellOwners[i][j] == null) {
+					tie = false;
+				}
 			}
 		}
-		return this.checkArray(horizonal) || this.checkArray(vertical) || this.checkArray(diagonalRight) || this.checkArray(diagonalLeft);
+		if (tie) {
+			this.gameTie = true;
+			return 'tie';
+		} else {
+			return this.checkArray(horizonal) || this.checkArray(vertical) || this.checkArray(diagonalRight) || this.checkArray(diagonalLeft)
+		}
 	}
 
 	checkArray(array) {
-		console.log(array);
 		let redCounter = 0;
 		let yellowCounter = 0;
 		for (let i = 0; i < array.length; i++) {
@@ -308,10 +338,26 @@ export class ConnectFour {
 					break;
 			}
 		}
-		//console.log(redCounter);
-		//console.log(yellowCounter);
-
 		return false;
+	}
+
+	winText() {
+		// set up text parameters
+		let size = this.cellHeight;
+		this.ctx.fillStyle = this.gameTie ? this.colourTie : this.playerTurn ? this.colourYellow : this.colourRed;
+		this.ctx.font = size + 'px dejavu sans mono';
+		this.ctx.lineJoin = 'round';
+		this.ctx.lineWidth = size / 10;
+		this.ctx.strokeStyle = this.gameTie ? this.colourTieDark : this.playerTurn ? this.colourYellowDark : this.colourRedDark;
+		this.ctx.textAlign = 'center';
+		this.ctx.textBaseline = 'middle';
+
+		// draw the text
+		let offset = size * 0.55;
+		let text = this.gameTie ? this.tieText : this.playerTurn ? this.yellowWinText : this.redWinText;
+
+		this.ctx.strokeText(text, this.width / 2, this.height / 2);
+		this.ctx.fillText(text, this.width / 2, this.height / 2);
 	}
 
 	roundRect(ctx, x, y, width, height, radius = 5, fill, stroke = true) {
