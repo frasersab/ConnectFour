@@ -77,7 +77,6 @@ export class ConnectFour {
 			this.initialise();
 
 		} else {
-
 			// find the next available cell in the column
 			let cell = this.getCell(event.offsetX, event.offsetY);
 
@@ -94,18 +93,10 @@ export class ConnectFour {
 				this.drawGrid();
 
 				// check for win
-				let winner = this.checkWin();
-
-				if (winner == 0) {
-					// red wins
+				if (this.checkWin(cell[0], cell[1])) {
 					this.gameOver = true;
-					console.log('Red Wins!');
-
-				} else if (winner == 1) {
-					// yellow wins
-					this.gameOver = true;
-					console.log('Yellow Wins!');
-
+					console.log('game over');
+					return;
 				} else {
 					// toggle player turn
 					this.playerTurn ^= 1;
@@ -266,77 +257,61 @@ export class ConnectFour {
 		return [cell[0], this.rows - 1];
 	}
 
-	checkWin() {
+	checkWin(column, row) {
+		let horizonal = [], vertical = [], diagonalLeft = [], diagonalRight = [];
+		// populate 
+		for (let i = 0; i < this.columns; i++) {
+			for (let j = 0; j < this.rows; j++) {
+				// horizontal
+				if (j == row) {
+					horizonal.push(this.cellOwners[i][j]);
+				}
+				// vertical
+				if (i == column) {
+					vertical.push(this.cellOwners[i][j]);
+				}
+				// diagonalRight (bottom left to top right)
+				if (i + j == column + row) {
+					diagonalRight.push(this.cellOwners[i][j]);
+				}
+
+				// diagonalLeft (top left to bottom right)
+				if (i - j == column - row) {
+					diagonalLeft.push(this.cellOwners[i][j]);
+				}
+			}
+		}
+		return this.checkArray(horizonal) || this.checkArray(vertical) || this.checkArray(diagonalRight) || this.checkArray(diagonalLeft);
+	}
+
+	checkArray(array) {
+		console.log(array);
 		let redCounter = 0;
 		let yellowCounter = 0;
-		// check for right/down horizontal win by scanning columns
-		for (let i = 0; i < this.rows; i++) {
-			redCounter = 0;
-			yellowcounter = 0;
-			for (let j = 0; j < this.columns; j++) {
-				switch (this.cellOwners[i][j]) {
-					case 0:
-						redCounter++;
-						yellowcounter = 0;
-						if (redCounter >= this.connect) return 0;
-						break;
-					case 1:
-						redCounter = 0;
-						yellowcounter++;
-						if (yellowCounter >= this.connect) return 0;
-						break;
-					default:
-						redCounter = 0;
-						yellowcounter = 0;
-				}
+		for (let i = 0; i < array.length; i++) {
+			switch (array[i]) {
+				case 0:
+					// red
+					redCounter++;
+					if (redCounter >= this.connect) return true;
+					yellowCounter = 0;
+					break;
+				case 1:
+					// yellow
+					yellowCounter++;
+					if (yellowCounter >= this.connect) return true;
+					redCounter = 0;
+					break;
+				default:
+					redCounter = 0;
+					yellowCounter = 0;
+					break;
 			}
 		}
-		// check for horizontal win by scanning columns
-		for (let i = 0; i < this.rows; i++) {
-			redCounter = 0;
-			yellowcounter = 0;
-			for (let j = 0; j < this.columns; j++) {
-				switch (this.cellOwners[i][j]) {
-					case 0:
-						redCounter++;
-						yellowcounter = 0;
-						if (redCounter >= this.connect) return 0;
-						break;
-					case 1:
-						redCounter = 0;
-						yellowcounter++;
-						if (yellowCounter >= this.connect) return 0;
-						break;
-					default:
-						redCounter = 0;
-						yellowcounter = 0;
-				}
-			}
-		}
-		// check for vertical win by scanning rows
-		for (let i = 0; i < this.columns; i++) {
-			redCounter = 0;
-			yellowcounter = 0;
-			for (let j = 0; j < this.rows; j++) {
-				switch (this.cellOwners[i][j]) {
-					case 0:
-						redCounter++;
-						yellowcounter = 0;
-						if (redCounter >= this.connect) return 0;
-						break;
-					case 1:
-						redCounter = 0;
-						yellowcounter++;
-						if (yellowCounter >= this.connect) return 0;
-						break;
-					default:
-						redCounter = 0;
-						yellowcounter = 0;
-				}
-			}
-		}
+		//console.log(redCounter);
+		//console.log(yellowCounter);
 
-		return null;
+		return false;
 	}
 
 	roundRect(ctx, x, y, width, height, radius = 5, fill, stroke = true) {
