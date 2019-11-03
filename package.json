@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "parcel src/index.html",
     "build": "parcel build src/index.html",
-    "build:url": "parcel build src/index.html --public-url /ConnectFour/",
+    "build-url": "parcel build src/index.html --public-url /ConnectFour/",
     "git-master": "git push -u origin master",
     "git-page": "git subtree push --prefix dist origin gh-pages"
   },
