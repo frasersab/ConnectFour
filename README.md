@@ -1,4 +1,4 @@
-# ConnectFour
+# Connect Four
 ## How to play
 Navigate to https://frasersab.github.io/ConnectFour/ to play!
 You know how to play connect four right?
